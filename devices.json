@@ -1,0 +1,98 @@
+{
+  "families": [
+    {
+      "id": "multidevice-family",
+      "name": "SidecarTridge Multi-Device Family",
+      "description": "Firmware builds for A multi-device emulator on Raspberry Pi Pico steroids for the Atari ST, STE, and Mega series computers.",
+      "image": "https://sidecartridge.com/assets/images/products/multidevice/BOARD-3.1-PICOW-TOP.png",
+      "firmwares": [
+        {
+          "id": "multidevice-1G-full",
+          "name": "Multidevice First Generation (1G) Full",
+          "description": "The first generation of the SidecarTridge Multi-Device cartridge firmware.",
+          "device_type": "RP2040",
+          "datetime": "2025-02-01T12:30:00Z",
+          "version": "v2.0.9",
+          "uf2_url": "https://github.com/sidecartridge/rp2-booster-bootloader/releases/download/v2.0.9/rp-booster-v2.0.9-full.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "multidevice-1G-debug",
+          "name": "Multidevice First Generation (1G) Debug",
+          "description": "The debug build of the first generation SidecarTridge Multi-Device cartridge firmware.",
+          "device_type": "RP2040",
+          "datetime": "2025-02-01T12:30:00Z",
+          "version": "v2.0.9",
+          "uf2_url": "https://github.com/sidecartridge/rp2-booster-bootloader/releases/download/v2.0.9/rp-booster-v2.0.9-debug.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        }
+      ]
+    },
+    {
+      "id": "tosemulator-family",
+      "name": "SidecarTridge TOS Emulator Family",
+      "description": "Firmware builds for SidecarTridge TOS Emulator board for the Atari ST, STE, and Mega series computers.",
+      "image": "https://sidecartridge.com/assets/images/products/rom/ROM_EMULATOR_V3_BOARD_FRONT_1280px.png",
+      "firmwares": [
+        {
+          "id": "tos-emulator-v3-256kb",
+          "name": "TOS Emulator rev3 boards for Atari STE and Mega STE (256KB)",
+          "description": "Full 256KB firmware for SidecarTridge TOS Emulator v3 revision boards for Atari STE and Mega STE computers.",
+          "device_type": "RP2350",
+          "datetime": "2024-12-15T10:00:00Z",
+          "version": "v3.1.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-tos-emutos-256k-v3.1.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "tos-emulator-v3-192kb",
+          "name": "TOS Emulator rev3 boards for Atari ST and Mega ST (192KB)",
+          "description": "Full 192KB firmware for SidecarTridge TOS Emulator v3 revision boards for Atari ST and Mega ST computers.",
+          "device_type": "RP2350",
+          "datetime": "2024-12-15T10:00:00Z",
+          "version": "v3.1.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-tos-emutos-192k-v3.1.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "tos-emulator-v3-upgrade",
+          "name": "TOS Emulator rev3 boards upgrade for all Atari models",
+          "description": "Upgrade firmware for SidecarTridge TOS Emulator v3 revision boards for all Atari ST, STE, and Mega series computers.",
+          "device_type": "RP2350",
+          "datetime": "2024-12-15T10:00:00Z",
+          "version": "v3.1.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-tos-v3.1.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        }
+      ]
+    },
+    {
+      "id": "kickstartemulator-family",
+      "name": "SidecarTridge Kickstart Emulator Family",
+      "description": "Firmware builds for SidecarTridge Kickstart Emulator board for the Amiga 500 and 2000 computers.",
+      "image": "https://sidecartridge.com/assets/images/products/kickstart/KICKSTART-A500-TOP.png",
+      "firmwares": [
+        {
+          "id": "kickstart-emulator-v3-full",
+          "name": "Kickstart Emulator rev3 Full Firmware",
+          "description": "Full firmware for SidecarTridge Kickstart Emulator v3 revision boards for Amiga 500 and 2000 computers.",
+          "device_type": "RP2350",
+          "datetime": "2024-11-20T09:00:00Z",
+          "version": "v3.1.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-full-v3.1.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "kickstart-emulator-v3-upgrade",
+          "name": "Kickstart Emulator rev3 Upgrade Firmware",
+          "description": "Upgrade firmware for SidecarTridge Kickstart Emulator v3 revision boards for Amiga 500 and 2000 computers.",
+          "device_type": "RP2350",
+          "datetime": "2024-11-20T09:00:00Z",
+          "version": "v3.1.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-v3.1.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        }
+      ]
+    }
+  ]
+}

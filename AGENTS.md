@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project scope
-This project is the `rp-webusb-picoflash` utility page. It provides a WebUSB UF2 flasher for RP2040/RP2350 BOOTSEL ROM in a single `index.html`.
+This project is the `rp-webusb-picoflash` utility page. It provides a WebUSB UF2 flasher for RP2350 BOOTSEL ROM in a single `sidecartridge-firmware-installer.html`.
 
 ## Coding style
 - Prefer minimal dependencies; keep everything in a single HTML file when possible.
@@ -17,7 +17,7 @@ This project is the `rp-webusb-picoflash` utility page. It provides a WebUSB UF2
 - The erase step should be optional (user-controlled).
 
 ## Files of interest
-- `index.html`
+- `sidecartridge-firmware-installer.html`
 
 ## Testing
 - Manual test only: use Chromium, BOOTSEL mode device, verify load/erase/write/reboot logs.

@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RP2350 WebUSB Flasher</title>
+<style>
+body {
+  font-family: system-ui;
+  background: #0b0f17;
+  color: #e5e7eb;
+  padding: 20px;
+}
+
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #f97316;
+  font-weight: 600;
+  color: #0b0f17;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+button.state-not-connected {
+  background: #1f2937;
+  color: #f9fafb;
+  border: 1px solid #374151;
+}
+
+button.state-needs-access {
+  background: #fde047;
+  color: #111827;
+}
+
+button.state-writing {
+  background: #22c55e;
+  color: #052e16;
+}
+
+.steps {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  background: #0f172a;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.family-card {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  background: #0b1220;
+  color: #cbd5f5;
+}
+
+.family-card img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #1f2937;
+  background: #0b0f17;
+}
+
+.family-card h4 {
+  margin: 0 0 4px;
+  color: #e5e7eb;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.step-header span {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.step-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 12px;
+  color: #cbd5f5;
+  transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+}
+
+.step.active .step-content {
+  max-height: 480px;
+  opacity: 1;
+  padding: 8px 12px 12px;
+}
+
+.step.complete .step-header {
+  color: #86efac;
+}
+
+pre {
+  background: #111827;
+  padding: 10px;
+  border-radius: 6px;
+  height: 220px;
+  overflow: auto;
+}
+
+progress {
+  width: 100%;
+  height: 18px;
+  appearance: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress::-webkit-progress-value {
+  background: #3b82f6;
+}
+
+progress::-moz-progress-bar {
+  background: #3b82f6;
+}
+
+progress.progress-load::-webkit-progress-value {
+  background: #3b82f6;
+}
+
+progress.progress-load::-moz-progress-bar {
+  background: #3b82f6;
+}
+
+progress.progress-erase::-webkit-progress-value {
+  background: #ef4444;
+}
+
+progress.progress-erase::-moz-progress-bar {
+  background: #ef4444;
+}
+
+progress.progress-write::-webkit-progress-value {
+  background: #22c55e;
+}
+
+progress.progress-write::-moz-progress-bar {
+  background: #22c55e;
+}
+
+.progress-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+</style>
+</head>
+
+<body>
+
+<div id="browserWarning" style="display:none; padding:12px; background:#7f1d1d; border-radius:6px; margin-bottom:16px;">
+  Web flashing is not supported in this browser. Please use the manual BOOTSEL procedure and download the firmware instead.
+</div>
+
+<div id="app">
+  <h2>SidecarTridge Products Firmware Installer</h2>
+  <p style="margin-top:6px; color:#cbd5f5;">
+    This page helps you install firmware on your device safely. Select your device family and firmware,
+    then follow the steps to load and install it. No extra apps are needed.
+  </p>
+
+  <ul class="steps" id="steps">
+    <li id="step1" class="step active">
+      <div class="step-header">Step 1/3 <span>Ready</span></div>
+      <div class="step-content">
+        <div style="margin-bottom:8px;">Select the device family and firmware to install.</div>
+        <div style="display:grid; gap:8px;">
+          <label>
+            Family<br>
+            <select id="familySelect" style="width:100%; padding:6px;">
+              <option value="">Loading families...</option>
+            </select>
+          </label>
+          <div id="familyDetails" class="family-card" style="display:none;">
+            <img id="familyImage" alt="Family image">
+            <div>
+              <h4 id="familyName">Family</h4>
+              <div id="familyDescription"></div>
+            </div>
+          </div>
+          <label>
+            Firmware<br>
+            <select id="firmwareSelect" style="width:100%; padding:6px;" disabled>
+              <option value="">Select a family first</option>
+            </select>
+          </label>
+          <div id="firmwareDetails" style="padding:8px; border:1px solid #1f2937; border-radius:6px; background:#0b1220; color:#cbd5f5;">
+            Select a firmware to see details.
+          </div>
+          <div id="manualNotice" style="display:none; padding:8px; border:1px solid #7f1d1d; border-radius:6px; background:#1f2937; color:#fca5a5;">
+            Please follow the manual BOOTSEL instructions in the quickstart guide:
+            <a href="https://sidecartridge.com/quickstart/" target="_blank" rel="noopener" style="color:#fde047;">sidecartridge.com/quickstart</a>
+          </div>
+          <div id="downloadFirmwareButton" style="display:none;">
+            <a id="downloadFirmwareButtonLink" href="#" download style="display:inline-block; padding:8px 14px; border-radius:6px; background:#fde047; color:#111827; font-weight:600; text-decoration:none;">
+              Download firmware
+            </a>
+          </div>
+          <div id="downloadFirmwareLink" style="display:none;">
+            <a id="downloadFirmwareLinkEl" href="#" download style="color:#fde047; text-decoration:none;">Click here to download the firmware</a>
+          </div>
+          <label>
+            <button id="loadFirmware" type="button" class="secondary" disabled>Start flashing</button>
+          </label>
+        </div>
+      </div>
+    </li>
+    <li id="step2" class="step">
+      <div class="step-header">Step 2/3 <span>Pending</span></div>
+      <div class="step-content">
+        <div style="margin-bottom:8px;">Flashing process. Keep the device in BOOTSEL.</div>
+        <button id="grantUsb" class="secondary" type="button">Grant USB access</button>
+        <div id="flashControls" style="display:none; margin-top:8px;">
+          <button id="flash" disabled>Flash</button>
+          <button id="restart" style="margin-left:12px; display:none;">Start again</button>
+          <label style="margin-left:12px;">
+            <input type="checkbox" id="doErase" checked>
+            Erase before write
+          </label>
+        </div>
+        <div id="deviceWarning" style="margin-top:8px; color:#fca5a5; display:none;">
+          RP2040 detected. Web flashing is not available for RP2040. Use the manual BOOTSEL drag-and-drop procedure.
+        </div>
+      </div>
+    </li>
+    <li id="step3" class="step">
+      <div class="step-header">Step 3/3 <span>Pending</span></div>
+      <div class="step-content">
+        <div id="postInstall" style="margin-bottom:8px;">Success. You can unplug or flash again.</div>
+        <button id="flashAgain">Flash again</button>
+      </div>
+    </li>
+  </ul>
+
+  <br>
+
+  <br>
+
+  <div id="fileName" style="margin:8px 0 6px; color:#cbd5f5;">File name: (none)</div>
+  <div class="progress-wrap">
+    <progress id="prog" value="0" max="100"></progress>
+    <div id="progLabel" class="progress-label">0%</div>
+  </div>
+
+  <div style="margin:10px 0 6px; color:#cbd5f5; display:flex; align-items:center; gap:8px;">
+    <button id="toggleLog" class="secondary" type="button">Show process output</button>
+  </div>
+  <pre id="log" style="display:none;"></pre>
+</div>
+
+<script>
+const VID = 0x2E8A;
+const PICOBOOT_PID_RP2040 = 0x0003;
+const PICOBOOT_PID_RP2350 = 0x000F;
+const DEVICES_JSON_URL = "https://s3.eu-west-3.amazonaws.com/tosemulator.sidecartridge.com/devices.json";
+const UF2_MAGIC = 0x0A324655;
+const UF2_MAGIC2 = 0x9E5D5157;
+const UF2_END = 0x0AB16F30;
+const UF2_FLAG_NOFLASH = 0x00000001;
+const UF2_FLAG_FILE_CONTAINER = 0x00001000;
+const UF2_FLAG_FAMILY_ID = 0x00002000;
+
+const ADVANCED_UF2_VALIDATION = true;
+
+const PICOBOOT_MAGIC = 0x431fd10b;
+
+const CMD_EXCLUSIVE = 0x01;
+const CMD_REBOOT = 0x02;
+const CMD_ERASE = 0x03;
+const CMD_WRITE = 0x05;
+const CMD_EXIT_XIP = 0x06;
+
+const FLASH_BASE = 0x10000000;
+const SECTOR = 4096;
+
+let uf2 = null;
+let firmwareMeta = null;
+let bootselDetected = false;
+let bootselPermitted = false;
+let flashingActive = false;
+let bootselIsRp2040 = false;
+let deviceCatalog = null;
+let webUsbSupported = false;
+let deviceCatalogPromise = null;
+
+const logEl = document.getElementById("log");
+const progEl = document.getElementById("prog");
+const progLabelEl = document.getElementById("progLabel");
+const flashBtn = document.getElementById("flash");
+const grantUsbBtn = document.getElementById("grantUsb");
+const eraseToggle = document.getElementById("doErase");
+const restartBtn = document.getElementById("restart");
+const flashControlsEl = document.getElementById("flashControls");
+const fileNameEl = document.getElementById("fileName");
+const flashAgainBtn = document.getElementById("flashAgain");
+const logToggleBtn = document.getElementById("toggleLog");
+const appEl = document.getElementById("app");
+const warningEl = document.getElementById("browserWarning");
+const step1El = document.getElementById("step1");
+const step2El = document.getElementById("step2");
+const step3El = document.getElementById("step3");
+const familySelect = document.getElementById("familySelect");
+const firmwareSelect = document.getElementById("firmwareSelect");
+const loadFirmwareBtn = document.getElementById("loadFirmware");
+const deviceWarningEl = document.getElementById("deviceWarning");
+const firmwareDetailsEl = document.getElementById("firmwareDetails");
+const manualNoticeEl = document.getElementById("manualNotice");
+const downloadFirmwareButtonEl = document.getElementById("downloadFirmwareButton");
+const downloadFirmwareButtonLinkEl = document.getElementById("downloadFirmwareButtonLink");
+const downloadFirmwareLinkEl = document.getElementById("downloadFirmwareLink");
+const downloadFirmwareLinkAnchorEl = document.getElementById("downloadFirmwareLinkEl");
+const familyDetailsEl = document.getElementById("familyDetails");
+const familyImageEl = document.getElementById("familyImage");
+const familyNameEl = document.getElementById("familyName");
+const familyDescriptionEl = document.getElementById("familyDescription");
+const postInstallEl = document.getElementById("postInstall");
+
+const log = m => {
+  logEl.textContent += m + "\n";
+  logEl.scrollTop = logEl.scrollHeight;
+};
+
+if (logToggleBtn) {
+  logToggleBtn.addEventListener("click", () => {
+    const isHidden = logEl.style.display === "none";
+    logEl.style.display = isHidden ? "block" : "none";
+    logToggleBtn.textContent = isHidden ? "Hide process output" : "Show process output";
+  });
+}
+
+function updateFlashEnabled() {
+  flashBtn.disabled = !(uf2 && bootselDetected) || bootselIsRp2040 || !webUsbSupported;
+  if (grantUsbBtn) grantUsbBtn.disabled = !webUsbSupported;
+  if (flashControlsEl) {
+    flashControlsEl.style.display = bootselPermitted && webUsbSupported ? "block" : "none";
+  }
+  updateFlashLabel();
+}
+
+function updateFlashLabel() {
+  flashBtn.classList.remove("state-not-connected", "state-needs-access", "state-writing");
+  if (!webUsbSupported) {
+    flashBtn.textContent = "Web flashing not supported";
+    flashBtn.classList.add("state-not-connected");
+    return;
+  }
+  if (bootselIsRp2040) {
+    flashBtn.textContent = "RP2040 not supported";
+    flashBtn.classList.add("state-not-connected");
+    return;
+  }
+  if (flashingActive) {
+    flashBtn.textContent = "Writing firmware...";
+    flashBtn.classList.add("state-writing");
+    return;
+  }
+  if (!bootselDetected) {
+    flashBtn.textContent = "Not connected";
+    flashBtn.classList.add("state-not-connected");
+    return;
+  }
+  if (!bootselPermitted) {
+    flashBtn.textContent = "Connected. Press button to grant access";
+    flashBtn.classList.add("state-needs-access");
+    return;
+  }
+  flashBtn.textContent = "Writing firmware...";
+  flashBtn.classList.add("state-writing");
+}
+
+function setProgressMode(mode) {
+  progEl.classList.remove("progress-load", "progress-erase", "progress-write");
+  if (mode) progEl.classList.add(mode);
+}
+
+function setProgressValue(value) {
+  progEl.value = value;
+  if (progLabelEl) progLabelEl.textContent = `${value}%`;
+}
+
+function setStepState(activeStep, completedSteps = []) {
+  const steps = [step1El, step2El, step3El];
+  steps.forEach(step => {
+    if (!step) return;
+    step.classList.remove("active", "complete");
+  });
+  completedSteps.forEach(step => {
+    if (step) step.classList.add("complete");
+  });
+  if (activeStep) activeStep.classList.add("active");
+}
+
+function setStepHeader(stepEl, statusText) {
+  if (!stepEl) return;
+  const span = stepEl.querySelector(".step-header span");
+  if (span) span.textContent = statusText;
+}
+
+function isChromiumBrowser() {
+  const ua = navigator.userAgent;
+  const hasChromium = /Chrome|Chromium|Edg|Brave/.test(ua);
+  const isFirefox = /Firefox/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|Edg|Brave/.test(ua);
+  return hasChromium && !isFirefox && !isSafari;
+}
+
+function enforceBrowserSupport() {
+  webUsbSupported = !!navigator.usb;
+  if (!webUsbSupported) {
+    if (warningEl) warningEl.style.display = "block";
+  }
+  return webUsbSupported;
+}
+
+enforceBrowserSupport();
+
+async function loadFirmwareCatalog() {
+  if (deviceCatalogPromise) {
+    return deviceCatalogPromise;
+  }
+  deviceCatalogPromise = (async () => {
+  try {
+    const response = await fetch(DEVICES_JSON_URL);
+    if (!response.ok) throw new Error("Unable to load devices.json");
+    deviceCatalog = await response.json();
+    renderFamilies();
+  } catch (err) {
+    log("ERROR: " + err.message);
+    if (familySelect) {
+      familySelect.innerHTML = "<option value=\"\">Failed to load devices.json</option>";
+    }
+    throw err;
+  }
+  return deviceCatalog;
+  })();
+  return deviceCatalogPromise;
+}
+
+function renderFamilies() {
+  if (!familySelect || !deviceCatalog || !Array.isArray(deviceCatalog.families)) return;
+  familySelect.innerHTML = "<option value=\"\">Select a family...</option>";
+  deviceCatalog.families.forEach((family, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = family.name;
+    familySelect.appendChild(option);
+  });
+}
+
+function renderFirmwares(familyIndex) {
+  if (!firmwareSelect || !deviceCatalog) return;
+  firmwareSelect.innerHTML = "";
+  loadFirmwareBtn.disabled = true;
+  loadFirmwareBtn.style.display = "inline-block";
+  if (firmwareDetailsEl) {
+    firmwareDetailsEl.textContent = "Select a firmware to see details.";
+  }
+  if (manualNoticeEl) manualNoticeEl.style.display = "none";
+  if (downloadFirmwareButtonEl) downloadFirmwareButtonEl.style.display = "none";
+  if (downloadFirmwareLinkEl) downloadFirmwareLinkEl.style.display = "none";
+  if (familyDetailsEl) {
+    familyDetailsEl.style.display = "none";
+  }
+  firmwareMeta = null;
+  uf2 = null;
+  if (fileNameEl) fileNameEl.textContent = "File name: (none)";
+  setProgressValue(0);
+  updateFlashEnabled();
+
+  if (familyIndex === "") {
+    firmwareSelect.disabled = true;
+    firmwareSelect.innerHTML = "<option value=\"\">Select a family first</option>";
+    return;
+  }
+
+  const family = deviceCatalog.families[Number(familyIndex)];
+  const firmwares = family ? family.firmwares || [] : [];
+  if (familyDetailsEl && family) {
+    familyDetailsEl.style.display = "grid";
+    if (familyImageEl) familyImageEl.src = family.image || "";
+    if (familyNameEl) familyNameEl.textContent = family.name || "Family";
+    if (familyDescriptionEl) familyDescriptionEl.textContent = family.description || "";
+  }
+  firmwareSelect.disabled = false;
+  firmwareSelect.innerHTML = "<option value=\"\">Select a firmware...</option>";
+  firmwares.forEach((fw, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = `${fw.name} (${fw.version})`;
+    firmwareSelect.appendChild(option);
+  });
+}
+
+async function loadFirmwareSelection() {
+  if (!firmwareMeta) return;
+  if (firmwareMeta.device_type === "RP2040" || !webUsbSupported) {
+    setStepState(step2El, [step1El]);
+    setStepHeader(step1El, "Complete");
+    setStepHeader(step2El, "Manual");
+    log("RP2040 selected. Web flashing is not available. Use manual BOOTSEL instructions.");
+    updateFlashEnabled();
+    return;
+  }
+  try {
+    log("Downloading UF2...");
+    setStepState(step1El);
+    setStepHeader(step1El, "Working");
+    if (fileNameEl) fileNameEl.textContent = `File name: ${firmwareMeta.uf2_url.split("/").pop()}`;
+    const response = await fetch(firmwareMeta.uf2_url);
+    if (!response.ok) throw new Error("Unable to download UF2 file");
+    const buf = await response.arrayBuffer();
+    setProgressMode("progress-load");
+    setProgressValue(0);
+    uf2 = await parseUF2(buf, progress => {
+      setProgressValue(progress);
+      if (progress % 10 === 0) {
+        log(`Parsing UF2... ${progress}%`);
+      }
+    });
+    log(`Blocks: ${uf2.blocks.length}`);
+    log(`Erase ranges: ${uf2.ranges.length}`);
+    setStepState(step2El, [step1El]);
+    setStepHeader(step1El, "Complete");
+    setStepHeader(step2El, "Ready");
+    updateFlashEnabled();
+  } catch (err) {
+    uf2 = null;
+    updateFlashEnabled();
+    log("ERROR: " + err.message);
+  }
+}
+
+if (familySelect) {
+  familySelect.addEventListener("change", event => {
+    renderFirmwares(event.target.value);
+  });
+}
+
+if (firmwareSelect) {
+  firmwareSelect.addEventListener("change", event => {
+    const familyIndex = familySelect.value;
+    const fwIndex = event.target.value;
+    if (familyIndex === "" || fwIndex === "") {
+    firmwareMeta = null;
+    loadFirmwareBtn.disabled = true;
+    loadFirmwareBtn.style.display = "inline-block";
+    if (manualNoticeEl) manualNoticeEl.style.display = "none";
+    if (downloadFirmwareButtonEl) downloadFirmwareButtonEl.style.display = "none";
+    if (downloadFirmwareLinkEl) downloadFirmwareLinkEl.style.display = "none";
+    return;
+  }
+    const family = deviceCatalog.families[Number(familyIndex)];
+    firmwareMeta = family.firmwares[Number(fwIndex)];
+    const manualOnly = firmwareMeta.device_type === "RP2040" || !webUsbSupported;
+    if (firmwareDetailsEl) {
+      const downloadSnippet = manualOnly
+        ? ""
+        : ` (<a id="downloadInlineLink" href="${firmwareMeta.uf2_url}" download style="color:#fde047; text-decoration:none;">Click here to download the firmware</a>)`;
+      firmwareDetailsEl.innerHTML = `<strong>${firmwareMeta.name}</strong><br>` +
+        `Version: ${firmwareMeta.version}<br>` +
+        `${firmwareMeta.description}${downloadSnippet}`;
+    }
+    if (downloadFirmwareButtonLinkEl) {
+      downloadFirmwareButtonLinkEl.href = firmwareMeta.uf2_url;
+    }
+    if (downloadFirmwareLinkAnchorEl) {
+      downloadFirmwareLinkAnchorEl.href = firmwareMeta.uf2_url;
+    }
+    if (manualOnly) {
+      if (downloadFirmwareButtonEl) downloadFirmwareButtonEl.style.display = "block";
+      if (downloadFirmwareLinkEl) downloadFirmwareLinkEl.style.display = "none";
+      loadFirmwareBtn.disabled = true;
+      loadFirmwareBtn.style.display = "none";
+    } else {
+      if (downloadFirmwareButtonEl) downloadFirmwareButtonEl.style.display = "none";
+      if (downloadFirmwareLinkEl) downloadFirmwareLinkEl.style.display = "none";
+      loadFirmwareBtn.disabled = false;
+      loadFirmwareBtn.style.display = "inline-block";
+    }
+    if (manualNoticeEl) {
+      if (manualOnly) {
+        const prefix = firmwareMeta.device_type === "RP2040"
+          ? "This firmware targets RP2040. "
+          : "Web flashing is not available in this browser. ";
+        manualNoticeEl.innerHTML =
+          `${prefix}Please follow the manual BOOTSEL instructions in the quickstart guide: ` +
+          `<a href="https://sidecartridge.com/quickstart/" target="_blank" rel="noopener" style="color:#fde047;">sidecartridge.com/quickstart</a>`;
+        manualNoticeEl.style.display = "block";
+      } else {
+        manualNoticeEl.style.display = "none";
+      }
+    }
+    if (postInstallEl) {
+      postInstallEl.innerHTML = firmwareMeta.post_install_html || "Success. You can unplug or flash again.";
+    }
+  });
+}
+
+if (loadFirmwareBtn) {
+  loadFirmwareBtn.addEventListener("click", () => {
+    loadFirmwareSelection();
+  });
+}
+
+if (grantUsbBtn) {
+  grantUsbBtn.addEventListener("click", async () => {
+    if (!webUsbSupported) {
+      log("Web flashing is not supported in this browser.");
+      return;
+    }
+    try {
+      log("Requesting USB access...");
+      const dev = await navigator.usb.requestDevice({
+        filters: [
+          { vendorId: VID, productId: PICOBOOT_PID_RP2040 },
+          { vendorId: VID, productId: PICOBOOT_PID_RP2350 },
+          { vendorId: VID }
+        ]
+      });
+      bootselIsRp2040 = dev.productId === PICOBOOT_PID_RP2040;
+      if (deviceWarningEl) {
+        deviceWarningEl.style.display = bootselIsRp2040 ? "block" : "none";
+      }
+      bootselPermitted = true;
+      bootselDetected = true;
+      log(`USB access granted: ${describeDevice(dev)}`);
+      updateFlashEnabled();
+    } catch (err) {
+      log(`USB access request canceled (${err.message}).`);
+    }
+  });
+}
+
+document.getElementById("flash").onclick = async () => {
+  if (!uf2) return;
+  if (!webUsbSupported) {
+    log("Web flashing is not supported in this browser. Use the manual BOOTSEL procedure.");
+    return;
+  }
+
+  try {
+    setStepState(step2El, [step1El]);
+    setStepHeader(step1El, "Complete");
+    setStepHeader(step2El, "Working");
+    flashingActive = true;
+    updateFlashLabel();
+    log("Request device...");
+    const dev = await navigator.usb.requestDevice({
+      filters: [
+        { vendorId: VID, productId: PICOBOOT_PID_RP2040 },
+        { vendorId: VID, productId: PICOBOOT_PID_RP2350 },
+        { vendorId: VID }
+      ]
+    });
+    bootselIsRp2040 = dev.productId === PICOBOOT_PID_RP2040;
+    if (deviceWarningEl) {
+      deviceWarningEl.style.display = bootselIsRp2040 ? "block" : "none";
+    }
+    log(`Detected device: ${describeDevice(dev)}`);
+    bootselPermitted = true;
+    bootselDetected = true;
+    updateFlashEnabled();
+
+    if (bootselIsRp2040) {
+      log("RP2040 detected. Web flashing is not available. Use the manual BOOTSEL procedure.");
+      return;
+    }
+
+    await dev.open();
+    if (!dev.configuration) await dev.selectConfiguration(1);
+
+    const iface = findIface(dev.configuration);
+    if (!iface) throw new Error("No vendor interface found.");
+    log(`Using interface ${iface.iface}, endpoints out=${iface.out} in=${iface.in}`);
+
+    const pico = new PicoTool(dev, iface.iface, iface.out, iface.in);
+
+    log("Open + reset");
+    await pico.open();
+    await pico.reset();
+
+    log("Exclusive access");
+    try {
+      await pico.exclusiveAccess(1);
+    } catch (err) {
+      log(`Exclusive access failed (${err.message}); continuing...`);
+    }
+
+    log("Exit XIP");
+    await pico.exitXip();
+
+    if (eraseToggle && eraseToggle.checked) {
+      setProgressMode("progress-erase");
+      const totalEraseSectors = uf2.ranges.reduce(
+        (sum, r) => sum + Math.ceil((r.end - r.start) / SECTOR),
+        0
+      );
+      let erasedSectors = 0;
+
+      for (const r of uf2.ranges) {
+        log(`Erase 0x${r.start.toString(16)} (${r.end - r.start} bytes)`);
+        for (let addr = r.start; addr < r.end; addr += SECTOR) {
+          await pico.flashErase(addr, SECTOR, 10000);
+          erasedSectors += 1;
+          const progress = Math.round((erasedSectors / totalEraseSectors) * 100);
+        setProgressValue(progress);
+        if (erasedSectors % 32 === 0 || erasedSectors === totalEraseSectors) {
+          log(`Erase progress: ${progress}%`);
+        }
+          if ((addr - r.start) % (SECTOR * 64) === 0) await tick();
+        }
+      }
+    } else {
+      log("Erase skipped.");
+    }
+
+    setProgressMode("progress-write");
+    let i = 0;
+    for (const b of uf2.blocks) {
+      i++;
+      const progress = Math.round((i / uf2.blocks.length) * 100);
+      setProgressValue(progress);
+      if (i % 256 === 0 || i === uf2.blocks.length) {
+        log(`Write progress: ${progress}%`);
+      }
+      await pico.write(b.addr, b.data);
+      if (i % 32 === 0) await tick();
+    }
+
+    log("Reboot");
+    try {
+      await pico.reboot(0, PicoTool.SRAM_END, 250);
+      log("Done.");
+      setStepState(step3El, [step1El, step2El]);
+      setStepHeader(step2El, "Complete");
+      setStepHeader(step3El, "Success");
+    } catch (err) {
+      log(`Reboot failed (${err.message}). Unplug/replug to reboot.`);
+    }
+
+    await pico.close();
+    flashingActive = false;
+    updateFlashEnabled();
+  } catch (e) {
+    flashingActive = false;
+    updateFlashEnabled();
+    log("ERROR: " + e.message);
+  }
+};
+
+if (restartBtn) {
+  restartBtn.addEventListener("click", () => {
+    window.location.reload();
+  });
+}
+
+if (flashAgainBtn) {
+  flashAgainBtn.addEventListener("click", () => {
+    window.location.reload();
+  });
+}
+
+async function detectBootselDevices() {
+  if (!navigator.usb) return;
+  const devices = await navigator.usb.getDevices();
+  bootselPermitted = devices.some(dev => dev.vendorId === VID);
+  bootselIsRp2040 = devices.some(dev => dev.vendorId === VID && dev.productId === PICOBOOT_PID_RP2040);
+  bootselDetected = bootselPermitted;
+  if (deviceWarningEl) {
+    deviceWarningEl.style.display = bootselIsRp2040 ? "block" : "none";
+  }
+  updateFlashEnabled();
+}
+
+if (navigator.usb) {
+  navigator.usb.addEventListener("connect", event => {
+    if (event.device && event.device.vendorId === VID) {
+      bootselDetected = true;
+      bootselIsRp2040 = event.device.productId === PICOBOOT_PID_RP2040;
+      if (deviceWarningEl) {
+        deviceWarningEl.style.display = bootselIsRp2040 ? "block" : "none";
+      }
+      log(`Detected device: ${describeDevice(event.device)}`);
+      updateFlashEnabled();
+    }
+  });
+
+  navigator.usb.addEventListener("disconnect", event => {
+    if (event.device && event.device.vendorId === VID) {
+      bootselDetected = false;
+      bootselPermitted = false;
+      bootselIsRp2040 = false;
+      if (deviceWarningEl) {
+        deviceWarningEl.style.display = "none";
+      }
+      updateFlashEnabled();
+    }
+  });
+
+  detectBootselDevices();
+}
+
+loadFirmwareCatalog();
+
+function describeDevice(device) {
+  if (!device) return "Unknown device";
+  if (device.productId === PICOBOOT_PID_RP2040) return "RP2040 (BOOTSEL)";
+  if (device.productId === PICOBOOT_PID_RP2350) return "RP2350 (BOOTSEL)";
+  return `RP2 device (PID 0x${device.productId.toString(16).padStart(4, "0")})`;
+}
+
+async function parseUF2(buf, onProgress) {
+  if (buf.byteLength % 512) throw new Error("Bad UF2 size");
+
+  const dv = new DataView(buf);
+  const blocks = [];
+  const ranges = [];
+  const totalBlocks = buf.byteLength / 512;
+  let lastProgress = -1;
+  let expectedNumBlocks = null;
+  const blockNumbers = new Set();
+
+  for (let o = 0, idx = 0; o < buf.byteLength; o += 512, idx += 1) {
+    if (dv.getUint32(o, true) !== UF2_MAGIC) throw new Error("Bad UF2 magic");
+    if (dv.getUint32(o + 4, true) !== UF2_MAGIC2) throw new Error("Bad UF2 magic2");
+    if (dv.getUint32(o + 508, true) !== UF2_END) throw new Error("Bad UF2 end magic");
+
+    const flags = dv.getUint32(o + 8, true);
+    if (flags & UF2_FLAG_NOFLASH) continue;
+
+    let addr = dv.getUint32(o + 12, true);
+    const size = dv.getUint32(o + 16, true);
+    const blockNo = dv.getUint32(o + 20, true);
+    const numBlocks = dv.getUint32(o + 24, true);
+    if (size <= 0 || size > 476) throw new Error("Invalid UF2 payload size");
+
+    if (ADVANCED_UF2_VALIDATION) {
+      if (expectedNumBlocks === null) expectedNumBlocks = numBlocks;
+      if (numBlocks !== expectedNumBlocks) {
+        throw new Error("UF2 block count mismatch");
+      }
+      if (blockNo >= numBlocks) {
+        throw new Error("UF2 block number out of range");
+      }
+      blockNumbers.add(blockNo);
+      if (flags & UF2_FLAG_FILE_CONTAINER) {
+        throw new Error("UF2 file container not supported");
+      }
+      if (flags & UF2_FLAG_FAMILY_ID) {
+        const familyId = dv.getUint32(o + 28, true);
+        if (!familyId) {
+          throw new Error("UF2 family ID flag set but ID missing");
+        }
+      }
+    }
+
+    if (addr < FLASH_BASE) addr += FLASH_BASE;
+
+    blocks.push({
+      addr,
+      data: buf.slice(o + 32, o + 32 + size)
+    });
+
+    const start = addr & ~(SECTOR - 1);
+    const end = (addr + size + SECTOR - 1) & ~(SECTOR - 1);
+    ranges.push({ start, end });
+
+    const progress = Math.floor(((idx + 1) / totalBlocks) * 100);
+    if (progress !== lastProgress) {
+      lastProgress = progress;
+      if (onProgress) onProgress(progress);
+    }
+    if ((o & 0x7fff) === 0) await tick();
+  }
+
+  if (ADVANCED_UF2_VALIDATION && expectedNumBlocks !== null) {
+    if (blockNumbers.size === 0) throw new Error("UF2 contains no flashable blocks");
+  }
+
+  blocks.sort((a, b) => a.addr - b.addr);
+
+  ranges.sort((a, b) => a.start - b.start);
+  const merged = [];
+  for (const r of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && r.start <= last.end) {
+      last.end = Math.max(last.end, r.end);
+    } else {
+      merged.push({ start: r.start, end: r.end });
+    }
+  }
+
+  return { blocks, ranges: merged };
+}
+
+function findIface(cfg) {
+  const preferredIndex = cfg.interfaces.length <= 1 ? 0 : 1;
+  const preferred = cfg.interfaces[preferredIndex];
+  if (preferred) {
+    const alt = preferred.alternates[0];
+    if (alt && alt.interfaceClass === 0xff) {
+      const o = alt.endpoints.find(e => e.direction === "out");
+      const n = alt.endpoints.find(e => e.direction === "in");
+      if (o && n) {
+        return { iface: preferred.interfaceNumber, out: o.endpointNumber, in: n.endpointNumber };
+      }
+    }
+  }
+
+  for (const i of cfg.interfaces) {
+    for (const a of i.alternates) {
+      if (a.interfaceClass !== 0xff) continue;
+      const o = a.endpoints.find(e => e.direction === "out");
+      const n = a.endpoints.find(e => e.direction === "in");
+      if (o && n) {
+        return { iface: i.interfaceNumber, out: o.endpointNumber, in: n.endpointNumber };
+      }
+    }
+  }
+  return null;
+}
+
+async function tick() {
+  return new Promise(r => setTimeout(r, 0));
+}
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+class PicoTool {
+  static SRAM_END = 0x20042000;
+
+  constructor(device, iface, outEndpoint, inEndpoint) {
+    this.device = device;
+    this.iface = iface;
+    this.outEndpoint = outEndpoint;
+    this.inEndpoint = inEndpoint;
+    this.token = 1;
+  }
+
+  async open() {
+    await this.device.claimInterface(this.iface);
+  }
+
+  async close() {
+    await this.device.close();
+  }
+
+  async reset() {
+    await withTimeout(this.device.controlTransferOut({
+      requestType: "vendor",
+      recipient: "interface",
+      request: 0x41,
+      value: 0x00,
+      index: this.iface
+    }), 3000, "controlTransferOut");
+  }
+
+  async exclusiveAccess(enabled) {
+    const cmd = new ArrayBuffer(1);
+    new DataView(cmd).setUint8(0, enabled ? 1 : 0);
+    await this.runCmd(CMD_EXCLUSIVE, cmd);
+  }
+
+  async reboot(pc, sp, delayMs) {
+    const cmd = new ArrayBuffer(12);
+    const view = new DataView(cmd);
+    view.setUint32(0, pc, true);
+    view.setUint32(4, sp, true);
+    view.setUint32(8, delayMs, true);
+    await this.runCmd(CMD_REBOOT, cmd);
+  }
+
+  async flashErase(addr, size, timeoutMs) {
+    const cmd = new ArrayBuffer(8);
+    const view = new DataView(cmd);
+    view.setUint32(0, addr, true);
+    view.setUint32(4, size, true);
+    await this.runCmd(CMD_ERASE, cmd, undefined, timeoutMs);
+  }
+
+  async write(addr, data) {
+    const cmd = new ArrayBuffer(8);
+    const view = new DataView(cmd);
+    view.setUint32(0, addr, true);
+    view.setUint32(4, data.byteLength, true);
+    await this.runCmd(CMD_WRITE, cmd, data);
+  }
+
+  async exitXip() {
+    await this.runCmd(CMD_EXIT_XIP);
+  }
+
+  async runCmd(cmdId, cmdData, transferLengthOrData, timeoutMs = 3000) {
+    const cmd = new ArrayBuffer(32);
+    const view = new DataView(cmd);
+
+    view.setUint32(0, PICOBOOT_MAGIC, true);
+    view.setUint32(4, this.token++, true);
+    view.setUint8(8, cmdId);
+    view.setUint8(9, cmdData ? cmdData.byteLength : 0);
+    view.setUint16(10, 0x0000, true);
+
+    if (transferLengthOrData === undefined) {
+      view.setUint32(12, 0, true);
+    } else if (typeof transferLengthOrData === "number") {
+      view.setUint32(12, transferLengthOrData, true);
+    } else {
+      view.setUint32(12, transferLengthOrData.byteLength, true);
+    }
+
+    if (cmdData) {
+      const src = new Uint8Array(cmdData);
+      new Uint8Array(cmd, 16, src.length).set(src);
+    }
+
+    await withTimeout(this.device.transferOut(this.outEndpoint, cmd), timeoutMs, "transferOut(cmd)");
+
+    let transferInResult;
+    if (transferLengthOrData !== undefined) {
+      if (cmdId & 0x80) {
+        transferInResult = await withTimeout(
+          this.device.transferIn(this.inEndpoint, transferLengthOrData),
+          timeoutMs,
+          "transferIn(data)"
+        );
+      } else {
+        await withTimeout(
+          this.device.transferOut(this.outEndpoint, transferLengthOrData),
+          timeoutMs,
+          "transferOut(data)"
+        );
+      }
+    }
+
+    if (cmdId & 0x80) {
+      await withTimeout(
+        this.device.transferOut(this.outEndpoint, new ArrayBuffer(1)),
+        timeoutMs,
+        "transferOut(ack)"
+      );
+    } else {
+      transferInResult = await withTimeout(
+        this.device.transferIn(this.inEndpoint, 1),
+        timeoutMs,
+        "transferIn(status)"
+      );
+    }
+
+    return transferInResult ? new Uint8Array(transferInResult.data.buffer) : null;
+  }
+}
+</script>
+
+</body>
+</html>
