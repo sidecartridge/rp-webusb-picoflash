@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PicoTool Web Command Sender</title>
+<style>
+:root {
+  --bg: #0b0f17;
+  --panel: #111827;
+  --panel-2: #0f172a;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --accent: #22d3ee;
+  --warn: #fb7185;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(circle at top right, #132036 0, var(--bg) 40%);
+  color: var(--text);
+}
+main {
+  width: min(900px, 95vw);
+  margin: 24px auto;
+  background: rgba(17, 24, 39, 0.92);
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 16px;
+}
+h1 { margin: 0 0 8px; font-size: 1.3rem; }
+p { margin: 0 0 12px; color: var(--muted); }
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+button, input {
+  border-radius: 8px;
+  border: 1px solid #334155;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+}
+button {
+  color: #001018;
+  background: var(--accent);
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+button.secondary {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid #334155;
+}
+button.warn {
+  background: var(--warn);
+  color: #2a0409;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+input {
+  background: #0b1220;
+  color: var(--text);
+  flex: 1;
+  min-width: 240px;
+}
+#status {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #0b1220;
+  color: var(--muted);
+}
+pre {
+  margin: 0;
+  min-height: 220px;
+  max-height: 55vh;
+  overflow: auto;
+  background: #030712;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 10px;
+}
+small { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>PicoTool Web Command Sender</h1>
+  <p>Connect to RP2 BOOTSEL device and send PicoBoot commands for quick tests.</p>
+
+  <div id="warning" style="display:none; margin-bottom:10px; padding:8px; border:1px solid #7f1d1d; border-radius:8px; background:#2a0b12; color:#fecaca;"></div>
+  <div id="status">Status: Not connected</div>
+
+  <div class="row">
+    <button id="connectBtn">Connect USB</button>
+    <button id="disconnectBtn" class="secondary" disabled>Disconnect</button>
+    <button id="clearBtn" class="secondary">Clear Log</button>
+  </div>
+
+  <div class="row">
+    <button id="exclusiveOnBtn" class="secondary" disabled>Exclusive ON</button>
+    <button id="exclusiveOffBtn" class="secondary" disabled>Exclusive OFF</button>
+    <button id="exitXipBtn" class="secondary" disabled>Exit XIP</button>
+    <button id="statusBtn" class="secondary" disabled>Cmd Status</button>
+    <button id="getInfoBtn" class="secondary" disabled>Get Info</button>
+    <button id="rebootBtn" class="warn" disabled>Reboot</button>
+    <button id="reboot2NormalBtn" class="warn" disabled>Reboot2 Normal</button>
+    <button id="reboot2BootselBtn" class="warn" disabled>Reboot2 BOOTSEL</button>
+  </div>
+
+  <div class="row">
+    <button id="presetAppBtn" class="secondary" disabled>Preset: App</button>
+    <button id="presetBootselBtn" class="secondary" disabled>Preset: BOOTSEL</button>
+    <button id="presetBootselNoMsdBtn" class="secondary" disabled>Preset: BOOTSEL no-MSD</button>
+  </div>
+
+  <div class="row">
+    <input id="customCmd" value="status" aria-label="Custom command">
+    <button id="sendBtn" disabled>Send</button>
+  </div>
+
+  <small>Examples: <code>status</code>, <code>getinfo 1 0 0 64</code>, <code>read 0x10000000 16</code>, <code>reboot 0 0x20042000 500</code></small>
+
+  <pre id="log"></pre>
+</main>
+
+<script>
+const VID = 0x2E8A;
+const PICOBOOT_PID_RP2040 = 0x0003;
+const PICOBOOT_PID_RP2350 = 0x000F;
+
+const PICOBOOT_MAGIC = 0x431fd10b;
+const PICOBOOT_IF_RESET = 0x41;
+const PICOBOOT_IF_CMD_STATUS = 0x42;
+const CMD_EXCLUSIVE = 0x01;
+const CMD_REBOOT = 0x02;
+const CMD_EXIT_XIP = 0x06;
+const CMD_READ = 0x84;
+const CMD_GET_INFO = 0x8b;
+const CMD_REBOOT2 = 0x0a;
+const SRAM_END = 0x20042000;
+const REBOOT2_FLAG_REBOOT_TYPE_NORMAL = 0x0;
+const REBOOT2_FLAG_REBOOT_TYPE_BOOTSEL = 0x2;
+const BOOTSEL_FLAG_DISABLE_MSD_INTERFACE = 0x01;
+
+const STATUS_NAMES = {
+  0: "OK",
+  1: "UNKNOWN_CMD",
+  2: "INVALID_CMD_LENGTH",
+  3: "INVALID_TRANSFER_LENGTH",
+  4: "INVALID_ADDRESS",
+  5: "BAD_ALIGNMENT",
+  6: "INTERLEAVED_WRITE",
+  7: "REBOOTING",
+  8: "UNKNOWN_ERROR",
+  9: "INVALID_STATE",
+  10: "NOT_PERMITTED",
+  11: "INVALID_ARG",
+  12: "BUFFER_TOO_SMALL",
+  13: "PRECONDITION_NOT_MET",
+  14: "MODIFIED_DATA",
+  15: "INVALID_DATA",
+  16: "NOT_FOUND",
+  17: "UNSUPPORTED_MODIFICATION"
+};
+
+const statusEl = document.getElementById("status");
+const warningEl = document.getElementById("warning");
+const logEl = document.getElementById("log");
+const connectBtn = document.getElementById("connectBtn");
+const disconnectBtn = document.getElementById("disconnectBtn");
+const clearBtn = document.getElementById("clearBtn");
+const rebootBtn = document.getElementById("rebootBtn");
+const reboot2NormalBtn = document.getElementById("reboot2NormalBtn");
+const reboot2BootselBtn = document.getElementById("reboot2BootselBtn");
+const presetAppBtn = document.getElementById("presetAppBtn");
+const presetBootselBtn = document.getElementById("presetBootselBtn");
+const presetBootselNoMsdBtn = document.getElementById("presetBootselNoMsdBtn");
+const exitXipBtn = document.getElementById("exitXipBtn");
+const statusBtn = document.getElementById("statusBtn");
+const getInfoBtn = document.getElementById("getInfoBtn");
+const exclusiveOnBtn = document.getElementById("exclusiveOnBtn");
+const exclusiveOffBtn = document.getElementById("exclusiveOffBtn");
+const customCmdEl = document.getElementById("customCmd");
+const sendBtn = document.getElementById("sendBtn");
+
+let currentDevice = null;
+let pico = null;
+
+function log(msg) {
+  const t = new Date().toLocaleTimeString();
+  logEl.textContent += `[${t}] ${msg}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setStatus(msg) {
+  statusEl.textContent = `Status: ${msg}`;
+}
+
+function setWarning(msg) {
+  if (!msg) {
+    warningEl.style.display = "none";
+    warningEl.textContent = "";
+    return;
+  }
+  warningEl.style.display = "block";
+  warningEl.textContent = msg;
+}
+
+function setConnected(connected) {
+  disconnectBtn.disabled = !connected;
+  rebootBtn.disabled = !connected;
+  reboot2NormalBtn.disabled = !connected;
+  reboot2BootselBtn.disabled = !connected;
+  presetAppBtn.disabled = !connected;
+  presetBootselBtn.disabled = !connected;
+  presetBootselNoMsdBtn.disabled = !connected;
+  exitXipBtn.disabled = !connected;
+  statusBtn.disabled = !connected;
+  getInfoBtn.disabled = !connected;
+  exclusiveOnBtn.disabled = !connected;
+  exclusiveOffBtn.disabled = !connected;
+  sendBtn.disabled = !connected;
+  connectBtn.disabled = connected;
+}
+
+function updateChipAwareUi() {
+  const is2350 = currentDevice && currentDevice.productId === PICOBOOT_PID_RP2350;
+  rebootBtn.textContent = is2350 ? "Reboot (auto=reboot2)" : "Reboot";
+  getInfoBtn.disabled = !(currentDevice && is2350);
+}
+
+function describeDevice(device) {
+  if (!device) return "Unknown";
+  if (device.productId === PICOBOOT_PID_RP2040) return "RP2040 (BOOTSEL)";
+  if (device.productId === PICOBOOT_PID_RP2350) return "RP2350 (BOOTSEL)";
+  return `RP2 device (PID 0x${device.productId.toString(16).padStart(4, "0")})`;
+}
+
+function findIface(cfg) {
+  const preferredIndex = cfg.interfaces.length <= 1 ? 0 : 1;
+  const preferred = cfg.interfaces[preferredIndex];
+  if (preferred) {
+    const alt = preferred.alternates[0];
+    if (alt && alt.interfaceClass === 0xff) {
+      const o = alt.endpoints.find(e => e.direction === "out");
+      const n = alt.endpoints.find(e => e.direction === "in");
+      if (o && n) {
+        return { iface: preferred.interfaceNumber, out: o.endpointNumber, in: n.endpointNumber };
+      }
+    }
+  }
+
+  for (const i of cfg.interfaces) {
+    for (const a of i.alternates) {
+      if (a.interfaceClass !== 0xff) continue;
+      const o = a.endpoints.find(e => e.direction === "out");
+      const n = a.endpoints.find(e => e.direction === "in");
+      if (o && n) {
+        return { iface: i.interfaceNumber, out: o.endpointNumber, in: n.endpointNumber };
+      }
+    }
+  }
+  return null;
+}
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+class PicoTool {
+  constructor(device, iface, outEndpoint, inEndpoint) {
+    this.device = device;
+    this.iface = iface;
+    this.outEndpoint = outEndpoint;
+    this.inEndpoint = inEndpoint;
+    this.token = 1;
+    this.lastBulkStatus = null;
+  }
+
+  async open() {
+    await this.device.claimInterface(this.iface);
+  }
+
+  async close() {
+    try { await this.device.close(); } catch (_) {}
+  }
+
+  async reset() {
+    await withTimeout(this.device.controlTransferOut({
+      requestType: "vendor",
+      recipient: "interface",
+      request: PICOBOOT_IF_RESET,
+      value: 0x00,
+      index: this.iface
+    }), 3000, "controlTransferOut");
+  }
+
+  async getCmdStatus() {
+    const result = await withTimeout(this.device.controlTransferIn({
+      requestType: "vendor",
+      recipient: "interface",
+      request: PICOBOOT_IF_CMD_STATUS,
+      value: 0x00,
+      index: this.iface
+    }, 16), 3000, "controlTransferIn(status)");
+
+    if (result.status && result.status !== "ok") {
+      throw new Error(`Command status transfer failed: ${result.status}`);
+    }
+    if (!result?.data || result.data.byteLength < 16) {
+      throw new Error("Invalid command status response");
+    }
+    const view = result.data;
+    const raw = new Uint8Array(view.buffer.slice(0, 16));
+    return {
+      transferStatus: result.status || "ok",
+      token: view.getUint32(0, true),
+      code: view.getUint32(4, true),
+      cmdId: view.getUint8(8),
+      inProgress: !!view.getUint8(9),
+      raw
+    };
+  }
+
+  getLastBulkStatus() {
+    return this.lastBulkStatus;
+  }
+
+  async exclusiveAccess(enabled) {
+    const cmd = new ArrayBuffer(1);
+    new DataView(cmd).setUint8(0, enabled ? 1 : 0);
+    await this.runCmd(CMD_EXCLUSIVE, cmd);
+  }
+
+  async reboot(pc, sp, delayMs) {
+    const cmd = new ArrayBuffer(12);
+    const view = new DataView(cmd);
+    view.setUint32(0, pc >>> 0, true);
+    view.setUint32(4, sp >>> 0, true);
+    view.setUint32(8, delayMs >>> 0, true);
+
+    try {
+      await this.runCmd(CMD_REBOOT, cmd);
+    } catch (e) {
+      const name = e?.name || "";
+      const msg = (e?.message || "").toLowerCase();
+      const expected =
+        name === "NetworkError" ||
+        name === "NotFoundError" ||
+        name === "AbortError" ||
+        msg.includes("disconnected") ||
+        msg.includes("device") ||
+        msg.includes("transfer") ||
+        msg.includes("not found");
+      if (!expected) throw e;
+    }
+  }
+
+  async reboot2(flags, delayMs, param0 = 0, param1 = 0) {
+    const cmd = new ArrayBuffer(16);
+    const view = new DataView(cmd);
+    view.setUint32(0, flags >>> 0, true);
+    view.setUint32(4, delayMs >>> 0, true);
+    view.setUint32(8, param0 >>> 0, true);
+    view.setUint32(12, param1 >>> 0, true);
+
+    try {
+      await this.runCmd(CMD_REBOOT2, cmd);
+    } catch (e) {
+      const name = e?.name || "";
+      const msg = (e?.message || "").toLowerCase();
+      const expected =
+        name === "NetworkError" ||
+        name === "NotFoundError" ||
+        name === "AbortError" ||
+        msg.includes("disconnected") ||
+        msg.includes("device") ||
+        msg.includes("transfer") ||
+        msg.includes("not found");
+      if (!expected) throw e;
+    }
+  }
+
+  async exitXip() {
+    await this.runCmd(CMD_EXIT_XIP);
+  }
+
+  async read(addr, size, timeoutMs = 3000) {
+    const cmd = new ArrayBuffer(8);
+    const view = new DataView(cmd);
+    view.setUint32(0, addr >>> 0, true);
+    view.setUint32(4, size >>> 0, true);
+    return await this.runCmd(CMD_READ, cmd, size, timeoutMs);
+  }
+
+  async getInfo(type, bParam = 0, wParam = 0, transferLen = 256) {
+    const cmd = new ArrayBuffer(16);
+    const view = new DataView(cmd);
+    view.setUint8(0, type & 0xff);
+    view.setUint8(1, bParam & 0xff);
+    view.setUint16(2, wParam & 0xffff, true);
+    view.setUint32(4, 0, true);
+    view.setUint32(8, 0, true);
+    view.setUint32(12, 0, true);
+    return await this.runCmd(CMD_GET_INFO, cmd, transferLen);
+  }
+
+  async runCmd(cmdId, cmdData, transferLengthOrData, timeoutMs = 3000) {
+    const cmd = new ArrayBuffer(32);
+    const view = new DataView(cmd);
+    const token = this.token;
+
+    view.setUint32(0, PICOBOOT_MAGIC, true);
+    view.setUint32(4, this.token++, true);
+    view.setUint8(8, cmdId);
+    view.setUint8(9, cmdData ? cmdData.byteLength : 0);
+    view.setUint16(10, 0x0000, true);
+
+    if (transferLengthOrData === undefined) {
+      view.setUint32(12, 0, true);
+    } else if (typeof transferLengthOrData === "number") {
+      view.setUint32(12, transferLengthOrData, true);
+    } else {
+      view.setUint32(12, transferLengthOrData.byteLength, true);
+    }
+
+    if (cmdData) {
+      const src = new Uint8Array(cmdData);
+      new Uint8Array(cmd, 16, src.length).set(src);
+    }
+
+    await withTimeout(this.device.transferOut(this.outEndpoint, cmd), timeoutMs, "transferOut(cmd)");
+
+    let transferInResult;
+    if (transferLengthOrData !== undefined) {
+      if (cmdId & 0x80) {
+        transferInResult = await withTimeout(
+          this.device.transferIn(this.inEndpoint, transferLengthOrData),
+          timeoutMs,
+          "transferIn(data)"
+        );
+      } else {
+        await withTimeout(
+          this.device.transferOut(this.outEndpoint, transferLengthOrData),
+          timeoutMs,
+          "transferOut(data)"
+        );
+      }
+    }
+
+    if (cmdId & 0x80) {
+      await withTimeout(
+        this.device.transferOut(this.outEndpoint, new Uint8Array(0)),
+        timeoutMs,
+        "transferOut(ack zlp)"
+      );
+    } else {
+      transferInResult = await withTimeout(
+        this.device.transferIn(this.inEndpoint, 64),
+        timeoutMs,
+        "transferIn(status)"
+      );
+      if (transferInResult?.data && transferInResult.data.byteLength >= 16) {
+        const statusView = transferInResult.data;
+        this.lastBulkStatus = {
+          sentCmdId: cmdId,
+          sentToken: token,
+          recvToken: statusView.getUint32(0, true),
+          recvCode: statusView.getUint32(4, true),
+          recvCmdId: statusView.getUint8(8),
+          recvInProgress: !!statusView.getUint8(9)
+        };
+      } else {
+        this.lastBulkStatus = null;
+      }
+    }
+
+    return transferInResult ? new Uint8Array(transferInResult.data.buffer) : null;
+  }
+}
+
+function parseNum(value) {
+  if (typeof value !== "string") return Number(value);
+  const v = value.trim().toLowerCase();
+  if (v.startsWith("0x")) return Number.parseInt(v, 16);
+  return Number(v);
+}
+
+function hexDump(bytes, baseAddr = 0) {
+  const lines = [];
+  for (let i = 0; i < bytes.length; i += 16) {
+    const chunk = bytes.slice(i, i + 16);
+    const hex = Array.from(chunk).map(b => b.toString(16).padStart(2, "0")).join(" ");
+    lines.push(`0x${(baseAddr + i).toString(16).padStart(8, "0")}: ${hex}`);
+  }
+  return lines.join("\n");
+}
+
+async function connectDevice() {
+  if (!navigator.usb) {
+    throw new Error("WebUSB not available in this browser");
+  }
+
+  setStatus("Waiting for USB device selection...");
+  const device = await navigator.usb.requestDevice({
+    filters: [
+      { vendorId: VID, productId: PICOBOOT_PID_RP2040 },
+      { vendorId: VID, productId: PICOBOOT_PID_RP2350 },
+      { vendorId: VID }
+    ]
+  });
+
+  await device.open();
+  if (!device.configuration) await device.selectConfiguration(1);
+
+  const iface = findIface(device.configuration);
+  if (!iface) throw new Error("No vendor interface found");
+
+  const tool = new PicoTool(device, iface.iface, iface.out, iface.in);
+  await tool.open();
+  await tool.reset();
+
+  currentDevice = device;
+  pico = tool;
+  setConnected(true);
+  updateChipAwareUi();
+  setStatus(`Connected: ${describeDevice(device)}`);
+  log(`Connected ${describeDevice(device)} iface=${iface.iface} out=${iface.out} in=${iface.in}`);
+}
+
+async function disconnectDevice() {
+  if (pico) await pico.close();
+  pico = null;
+  currentDevice = null;
+  setConnected(false);
+  updateChipAwareUi();
+  setStatus("Not connected");
+  log("Disconnected");
+}
+
+async function sendCommand(commandText) {
+  if (!pico) throw new Error("Not connected");
+  if (!commandText || !commandText.trim()) throw new Error("Empty command");
+  const parts = commandText.trim().split(/\s+/);
+  const cmd = (parts[0] || "").toLowerCase();
+
+  if (cmd === "reboot") {
+    const is2350 = currentDevice && currentDevice.productId === PICOBOOT_PID_RP2350;
+    const delay = parseNum(parts[3] ?? "500");
+    if (is2350) {
+      log(`Sending reboot via reboot2(normal) delay=${delay}`);
+      await pico.reboot2(REBOOT2_FLAG_REBOOT_TYPE_NORMAL, delay, 0, 0);
+      log("Reboot2(normal) sent (device may disconnect immediately)");
+    } else {
+      const pc = parseNum(parts[1] ?? "0");
+      const sp = parseNum(parts[2] ?? String(SRAM_END));
+      log(`Sending reboot pc=${pc} sp=${sp} delay=${delay}`);
+      await pico.reboot(pc, sp, delay);
+      log("Reboot sent (device may disconnect immediately)");
+    }
+    const bulk = pico.getLastBulkStatus();
+    if (bulk) {
+      const name = STATUS_NAMES[bulk.recvCode] || "UNKNOWN";
+      log(`BULK_STATUS token=${bulk.recvToken} cmd=0x${bulk.recvCmdId.toString(16)} code=${bulk.recvCode}(${name}) inProgress=${bulk.recvInProgress}`);
+    }
+    return;
+  }
+
+  if (cmd === "reboot2") {
+    const flags = parseNum(parts[1] ?? "0");
+    const delay = parseNum(parts[2] ?? "500");
+    const param0 = parseNum(parts[3] ?? "0");
+    const param1 = parseNum(parts[4] ?? "0");
+    log(`Sending reboot2 flags=0x${flags.toString(16)} delay=${delay} p0=0x${param0.toString(16)} p1=0x${param1.toString(16)}`);
+    await pico.reboot2(flags, delay, param0, param1);
+    log("Reboot2 sent (device may disconnect immediately)");
+    const bulk = pico.getLastBulkStatus();
+    if (bulk) {
+      const name = STATUS_NAMES[bulk.recvCode] || "UNKNOWN";
+      log(`BULK_STATUS token=${bulk.recvToken} cmd=0x${bulk.recvCmdId.toString(16)} code=${bulk.recvCode}(${name}) inProgress=${bulk.recvInProgress}`);
+    }
+    return;
+  }
+
+  if (cmd === "status") {
+    const st = await pico.getCmdStatus();
+    const name = STATUS_NAMES[st.code] || "UNKNOWN";
+    log(`CMD_STATUS xfer=${st.transferStatus} token=${st.token} cmd=0x${st.cmdId.toString(16)} code=${st.code}(${name}) inProgress=${st.inProgress}`);
+    log(`CMD_STATUS_RAW ${Array.from(st.raw).map(b => b.toString(16).padStart(2, "0")).join(" ")}`);
+    return;
+  }
+
+  if (cmd === "exclusive") {
+    const enabled = Number(parts[1] ?? 1) ? 1 : 0;
+    log(`Sending exclusive ${enabled}`);
+    await pico.exclusiveAccess(enabled);
+    log("Exclusive command complete");
+    const bulk = pico.getLastBulkStatus();
+    if (bulk) {
+      const name = STATUS_NAMES[bulk.recvCode] || "UNKNOWN";
+      log(`BULK_STATUS token=${bulk.recvToken} cmd=0x${bulk.recvCmdId.toString(16)} code=${bulk.recvCode}(${name}) inProgress=${bulk.recvInProgress}`);
+    }
+    return;
+  }
+
+  if (cmd === "exitxip" || cmd === "exit_xip") {
+    log("Sending exit XIP");
+    await pico.exitXip();
+    log("Exit XIP command complete");
+    const bulk = pico.getLastBulkStatus();
+    if (bulk) {
+      const name = STATUS_NAMES[bulk.recvCode] || "UNKNOWN";
+      log(`BULK_STATUS token=${bulk.recvToken} cmd=0x${bulk.recvCmdId.toString(16)} code=${bulk.recvCode}(${name}) inProgress=${bulk.recvInProgress}`);
+    }
+    return;
+  }
+
+  if (cmd === "read") {
+    const addr = parseNum(parts[1] ?? "0x10000000");
+    const size = parseNum(parts[2] ?? "16");
+    if (!Number.isFinite(addr) || !Number.isFinite(size) || size <= 0 || size > 4096) {
+      throw new Error("read usage: read <addr> <size>; size must be 1..4096");
+    }
+    log(`Reading 0x${addr.toString(16)} + ${size} bytes`);
+    const data = await pico.read(addr, size, 5000);
+    log(hexDump(data, addr));
+    return;
+  }
+
+  if (cmd === "getinfo") {
+    const type = parseNum(parts[1] ?? "1");
+    const bParam = parseNum(parts[2] ?? "0");
+    const wParam = parseNum(parts[3] ?? "0");
+    const len = parseNum(parts[4] ?? "64");
+    if (!Number.isFinite(type) || !Number.isFinite(len) || len <= 0 || len > 4096) {
+      throw new Error("getinfo usage: getinfo <type> [bParam] [wParam] [len]");
+    }
+    log(`Sending GET_INFO type=${type} bParam=${bParam} wParam=${wParam} len=${len}`);
+    const data = await pico.getInfo(type, bParam, wParam, len);
+    log(hexDump(data));
+    return;
+  }
+
+  throw new Error(`Unknown command: ${commandText}`);
+}
+
+connectBtn.addEventListener("click", async () => {
+  try {
+    log("Connect button pressed");
+    await connectDevice();
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+    setStatus("Connect failed");
+  }
+});
+
+disconnectBtn.addEventListener("click", async () => {
+  try {
+    await disconnectDevice();
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+clearBtn.addEventListener("click", () => {
+  logEl.textContent = "";
+});
+
+rebootBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("reboot 0 0x20042000 500");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+reboot2NormalBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("reboot2 0 500 0 0");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+reboot2BootselBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("reboot2 2 500 1 0");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+presetAppBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("reboot");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+presetBootselBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("reboot2 2 500 0 0");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+presetBootselNoMsdBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("reboot2 2 500 1 0");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+exitXipBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("exitxip");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+exclusiveOnBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("exclusive 1");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+exclusiveOffBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("exclusive 0");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+statusBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("status");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+getInfoBtn.addEventListener("click", async () => {
+  try {
+    await sendCommand("getinfo 1 0 0 64");
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+sendBtn.addEventListener("click", async () => {
+  try {
+    log(`Send: ${customCmdEl.value}`);
+    await sendCommand(customCmdEl.value);
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+customCmdEl.addEventListener("keydown", async event => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  if (sendBtn.disabled) return;
+  try {
+    log(`Send: ${customCmdEl.value}`);
+    await sendCommand(customCmdEl.value);
+  } catch (e) {
+    log(`ERROR: ${e.message}`);
+  }
+});
+
+if (navigator.usb) {
+  navigator.usb.addEventListener("connect", event => {
+    const d = event.device;
+    if (!d || d.vendorId !== VID) return;
+    log(`USB connect: ${describeDevice(d)}`);
+  });
+
+  navigator.usb.addEventListener("disconnect", async event => {
+    const d = event.device;
+    if (!d || d.vendorId !== VID) return;
+    log(`USB disconnect: ${describeDevice(d)}`);
+    if (currentDevice && event.device === currentDevice) {
+      await disconnectDevice();
+    }
+  });
+}
+
+setConnected(false);
+updateChipAwareUi();
+window.addEventListener("error", event => {
+  log(`JS ERROR: ${event.message}`);
+});
+window.addEventListener("unhandledrejection", event => {
+  const msg = event.reason?.message || String(event.reason);
+  log(`PROMISE ERROR: ${msg}`);
+});
+
+if (!window.isSecureContext) {
+  setWarning("This page is not in a secure context. Use https:// or http://localhost.");
+}
+if (!navigator.usb) {
+  setWarning("WebUSB is unavailable. Use Chromium-based browser and a secure context.");
+  connectBtn.disabled = true;
+}
+
+log(`Ready. secureContext=${window.isSecureContext} webusb=${!!navigator.usb}`);
+log("Click Connect USB to start.");
+</script>
+</body>
+</html>
