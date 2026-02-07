@@ -1,6 +1,6 @@
 # rp-webusb-picoflash
 
-A single-file WebUSB UF2 flasher for RP2350 devices in BOOTSEL mode.
+A single-file WebUSB UF2 flasher for RP2040 and RP2350 devices in BOOTSEL mode.
 
 This project runs fully in the browser (Chromium-based only) and uses the ROM vendor protocol (picotool-style), not the mass-storage UF2 drag & drop path.
 
@@ -14,7 +14,7 @@ This project runs fully in the browser (Chromium-based only) and uses the ROM ve
 ## Requirements
 
 - A Chromium-based browser: Chrome, Edge, or Brave.
-- A RP2350 device in BOOTSEL mode.
+- A RP2040 or RP2350 device in BOOTSEL mode.
 - WebUSB enabled (default on desktop Chromium).
 
 ## Usage
