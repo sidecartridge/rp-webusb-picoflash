@@ -111,16 +111,6 @@
       "image": "https://sidecartridge.com/assets/images/products/kickstart/KICKSTART-A500-TOP.png",
       "firmwares": [
         {
-          "id": "kickstart-emulator-v3-full",
-          "name": "Kickstart Emulator rev3 Full Firmware",
-          "description": "Full firmware for SidecarTridge Kickstart Emulator v3 revision boards for Amiga 500 and 2000 computers.",
-          "device_type": "RP2350",
-          "datetime": "2024-11-20T09:00:00Z",
-          "version": "v3.1.0",
-          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-full-v3.1.0.uf2",
-          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
-        },
-        {
           "id": "kickstart-emulator-v3-diagrom",
           "name": "Kickstart Emulator rev3 Full Firmware +  DiagROM",
           "description": "Full firmware for SidecarTridge Kickstart Emulator v3 revision boards for Amiga 500 and 2000 computers plus DiagROM diagnostic ROM as default ROM.",
@@ -138,6 +128,62 @@
           "datetime": "2024-11-20T09:00:00Z",
           "version": "v3.1.0",
           "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-v3.1.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        }
+      ]
+    },
+    {
+      "id": "keyboardemulator-croissant-family",
+      "name": "SidecarTridge Croissant Keyboard Emulator Family",
+      "description": "Firmware builds for the internal Croissant IKBD keyboard-controller emulator for Atari ST-family systems",
+      "image": "https://docs.sidecartridge.com/sidecartridge-keyboard/assets/images/KEYBOARD-EMULATOR-CROISSSANT-TOP.png",
+      "firmwares": [
+        {
+          "id": "keyboardemulator-croissant-release",
+          "name": "Croissant Internal Keyboard Emulator - Release",
+          "description": "Full firmware for SidecarTridge Croissant Internal Keyboard Emulator for Atari ST-family systems.",
+          "device_type": "RP2350",
+          "datetime": "2024-11-20T09:00:00Z",
+          "version": "v1.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.0.0-croissant-full.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "keyboardemulator-croissant-debug",
+          "name": "Croissant Internal Keyboard Emulator - Debug release",
+          "description": "Full firmware for SidecarTridge Croissant Internal Keyboard Emulator for Atari ST-family systems. Debug mode.",
+          "device_type": "RP2350",
+          "datetime": "2024-11-20T09:00:00Z",
+          "version": "v1.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.0.0-croissant-debug-full.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        }
+      ]
+    },
+    {
+      "id": "keyboardemulator-souffle-family",
+      "name": "SidecarTridge Souffle Keyboard Emulator Family",
+      "description": "Firmware builds for the external dongle Souffle IKBD keyboard-controller emulator for Atari Mega ST and Mega STE families",
+      "image": "https://docs.sidecartridge.com/sidecartridge-keyboard/assets/images/KEYBOARD-EMULATOR-SOUFFLE-PERSPECTIVE.png",
+      "firmwares": [
+        {
+          "id": "keyboardemulator-souffle-release",
+          "name": "Souffle External Dongle Keyboard Emulator - Release",
+          "description": "Full firmware for SidecarTridge Souffle External Dongle Keyboard Emulator for Atari Mega ST and Mega STE families.",
+          "device_type": "RP2350",
+          "datetime": "2024-11-20T09:00:00Z",
+          "version": "v1.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.0.0-souffle-full.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "keyboardemulator-souffle-debug",
+          "name": "Souffle External Dongle Keyboard Emulator - Debug release",
+          "description": "Full firmware for SidecarTridge Souffle External Dongle Keyboard Emulator for Atari Mega ST and Mega STE families. Debug mode.",
+          "device_type": "RP2350",
+          "datetime": "2024-11-20T09:00:00Z",
+          "version": "v1.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.0.0-souffle-debug-full.uf2",
           "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
         }
       ]
