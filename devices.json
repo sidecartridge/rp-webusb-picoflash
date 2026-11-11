@@ -235,6 +235,44 @@
       ]
     },
     {
+      "id": "tosemulator-family-rev4",
+      "name": "SidecarTridge TOS Emulator Family (board revision 4)",
+      "description": "Firmware builds for SidecarTridge TOS Emulator board revision 4 for the Atari ST, STE, and Mega series computers.",
+      "image": "https://sidecartridge.com/assets/images/products/rom/ROM_EMULATOR_V4_BOARD_FRONT_1280px.png",
+      "firmwares": [
+        {
+          "id": "tos-emulator-rev4-v4-256kb",
+          "name": "TOS Emulator, board revision 4, for Atari STE and Mega STE (256KB)",
+          "description": "Full 256KB firmware for SidecarTridge TOS Emulator board revision 4 for Atari STE and Mega STE computers. Only for board revision 4: on board revision 3 the firmware does not start and both LEDs blink together; install the board revision 3 file instead.",
+          "device_type": "RP2350",
+          "datetime": "2026-10-10T10:00:00Z",
+          "version": "v4.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-tos-rp2350b-emutos-256k-full-v4.0.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it into your computer to complete the installation.</p><p>The drive now holds SWITCHER 4.0.0 and the rescue switcher 4.0.0. Older copies of the SWITCHER on your floppies or hard disk do not work with this firmware: replace them too. See <a href=\"https://docs.sidecartridge.com/sidecartridge-tos/getting-startedV4/\">Getting Started</a>.</p>"
+        },
+        {
+          "id": "tos-emulator-rev4-v4-192kb",
+          "name": "TOS Emulator, board revision 4, for Atari ST and Mega ST (192KB)",
+          "description": "Full 192KB firmware for SidecarTridge TOS Emulator board revision 4 for Atari ST and Mega ST computers. Only for board revision 4: on board revision 3 the firmware does not start and both LEDs blink together; install the board revision 3 file instead.",
+          "device_type": "RP2350",
+          "datetime": "2026-10-10T10:00:00Z",
+          "version": "v4.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-tos-rp2350b-emutos-192k-full-v4.0.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it into your computer to complete the installation.</p><p>The drive now holds SWITCHER 4.0.0 and the rescue switcher 4.0.0. Older copies of the SWITCHER on your floppies or hard disk do not work with this firmware: replace them too. See <a href=\"https://docs.sidecartridge.com/sidecartridge-tos/getting-startedV4/\">Getting Started</a>.</p>"
+        },
+        {
+          "id": "tos-emulator-rev4-v4-upgrade",
+          "name": "TOS Emulator, board revision 4, upgrade for all Atari models",
+          "description": "Upgrade firmware for SidecarTridge TOS Emulator board revision 4 for all Atari ST, STE, and Mega series computers. It keeps the ROM images on the drive. Only for board revision 4: on board revision 3 the firmware does not start and both LEDs blink together; install the board revision 3 file instead.",
+          "device_type": "RP2350",
+          "datetime": "2026-10-10T10:00:00Z",
+          "version": "v4.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-tos-rp2350b-v4.0.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it into your computer to complete the installation.</p>"
+        }
+      ]
+    },
+    {
       "id": "kickstartemulator-family",
       "name": "SidecarTridge Kickstart Multi ROM Family",
       "description": "Firmware builds for SidecarTridge Kickstart Multi ROM board for the Amiga 500 and 2000 computers.",
@@ -279,6 +317,34 @@
           "version": "v3.1.0",
           "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-v3.1.0.uf2",
           "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        }
+      ]
+    },
+    {
+      "id": "kickstartemulator-family-rev4",
+      "name": "SidecarTridge Kickstart Multi ROM Family (board revision 4)",
+      "description": "Firmware builds for SidecarTridge Kickstart Multi ROM board revision 4 for the Amiga 500, 500+, 600 and 2000 computers.",
+      "image": "https://sidecartridge.com/assets/images/products/rom/ROM_EMULATOR_V4_BOARD_FRONT_1280px.png",
+      "firmwares": [
+        {
+          "id": "kickstart-emulator-rev4-v4-diagrom",
+          "name": "Kickstart Multi ROM, board revision 4, full firmware + DiagROM",
+          "description": "Full firmware for SidecarTridge Kickstart Multi ROM board revision 4 for Amiga 500, 500+, 600 and 2000 computers plus DiagROM diagnostic ROM as default ROM. Only for board revision 4: on board revision 3 the firmware does not start and both LEDs blink together; install the board revision 3 file instead.",
+          "device_type": "RP2350",
+          "datetime": "2026-10-10T09:00:00Z",
+          "version": "v4.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-rp2350b-diagrom-full-v4.0.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it into your computer to complete the installation.</p><p>The drive now holds SWITCHER 4.0.0 and the rescue switcher 4.0.0. Older copies of the SWITCHER on your floppies or hard disk do not work with this firmware: replace them too. See <a href=\"https://docs.sidecartridge.com/sidecartridge-kickstart/getting-startedV4/\">Getting Started</a>.</p>"
+        },
+        {
+          "id": "kickstart-emulator-rev4-v4-upgrade",
+          "name": "Kickstart Multi ROM, board revision 4, upgrade firmware",
+          "description": "Upgrade firmware for SidecarTridge Kickstart Multi ROM board revision 4 for Amiga 500, 500+, 600 and 2000 computers. It keeps the ROM images on the drive. Only for board revision 4: on board revision 3 the firmware does not start and both LEDs blink together; install the board revision 3 file instead.",
+          "device_type": "RP2350",
+          "datetime": "2026-10-10T09:00:00Z",
+          "version": "v4.0.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/sidecartridge-kickstart-rp2350b-update-v4.0.0.uf2",
+          "post_install_html": "<p>Unplug the device and plug it into your computer to complete the installation.</p>"
         }
       ]
     },
