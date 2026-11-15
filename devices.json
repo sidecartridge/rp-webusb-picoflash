@@ -7,6 +7,26 @@
       "image": "https://sidecartridge.com/assets/images/products/multidevice/BOARD-3.1-PICOW-TOP.png",
       "firmwares": [
         {
+          "id": "multidevice-1G-full-v2.5.0",
+          "name": "Multidevice First Generation (1G) Full",
+          "description": "The first generation of the SidecarTridge Multi-Device cartridge firmware.",
+          "device_type": "RP2040",
+          "datetime": "2026-11-10T00:00:00Z",
+          "version": "v2.5.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/rp-booster-v2.5.0-full.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
+          "id": "multidevice-1G-debug-v2.5.0",
+          "name": "Multidevice First Generation (1G) Debug",
+          "description": "The debug build of the first generation SidecarTridge Multi-Device cartridge firmware.",
+          "device_type": "RP2040",
+          "datetime": "2026-11-10T00:00:00Z",
+          "version": "v2.5.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/rp-booster-v2.5.0-debug.uf2",
+          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+        },
+        {
           "id": "multidevice-1G-full-v2.4.2",
           "name": "Multidevice First Generation (1G) Full",
           "description": "The first generation of the SidecarTridge Multi-Device cartridge firmware.",
