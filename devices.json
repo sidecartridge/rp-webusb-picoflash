@@ -382,7 +382,7 @@
           "datetime": "2026-11-26T19:47:26Z",
           "version": "v1.3.0",
           "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-croissant-full.uf2",
-          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and fit it back in your Atari ST. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>croissant-…</b> (password <b>sidecart</b>) and open <b>http://croissant.local</b>.</p>"
         },
         {
           "id": "keyboardemulator-croissant-debug-v1.3.0",
@@ -392,7 +392,7 @@
           "datetime": "2026-11-26T19:47:26Z",
           "version": "v1.3.0",
           "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-croissant-debug-full.uf2",
-          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and fit it back in your Atari ST. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>croissant-…</b> (password <b>sidecart</b>) and open <b>http://croissant.local</b>.</p>"
         },
         {
           "id": "keyboardemulator-croissant-release-v1.2.0",
@@ -470,7 +470,7 @@
           "datetime": "2026-11-26T19:47:26Z",
           "version": "v1.3.0",
           "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-souffle-full.uf2",
-          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and connect it to your Atari Mega ST or Mega STE. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>souffle-…</b> (password <b>sidecart</b>) and open <b>http://souffle.local</b>.</p>"
         },
         {
           "id": "keyboardemulator-souffle-debug-v1.3.0",
@@ -480,7 +480,7 @@
           "datetime": "2026-11-26T19:47:26Z",
           "version": "v1.3.0",
           "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-souffle-debug-full.uf2",
-          "post_install_html": "<p>Unplug the device and plug it to your computer to complete the installation.</p>"
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and connect it to your Atari Mega ST or Mega STE. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>souffle-…</b> (password <b>sidecart</b>) and open <b>http://souffle.local</b>.</p>"
         },
         {
           "id": "keyboardemulator-souffle-release-v1.2.0",
