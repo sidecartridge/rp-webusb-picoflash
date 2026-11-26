@@ -375,6 +375,26 @@
       "image": "https://docs.sidecartridge.com/sidecartridge-keyboard/assets/images/KEYBOARD-EMULATOR-CROISSANT-TOP.png",
       "firmwares": [
         {
+          "id": "keyboardemulator-croissant-release-v1.3.0",
+          "name": "Croissant Internal Keyboard Emulator - Release",
+          "description": "Full firmware for SidecarTridge Croissant Internal Keyboard Emulator for Atari ST-family systems.",
+          "device_type": "RP2350",
+          "datetime": "2026-11-26T19:47:26Z",
+          "version": "v1.3.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-croissant-full.uf2",
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and fit it back in your Atari ST. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>croissant-…</b> (password <b>sidecart</b>) and open <b>http://croissant.local</b>.</p>"
+        },
+        {
+          "id": "keyboardemulator-croissant-debug-v1.3.0",
+          "name": "Croissant Internal Keyboard Emulator - Debug release",
+          "description": "Full firmware for SidecarTridge Croissant Internal Keyboard Emulator for Atari ST-family systems. Debug mode.",
+          "device_type": "RP2350",
+          "datetime": "2026-11-26T19:47:26Z",
+          "version": "v1.3.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-croissant-debug-full.uf2",
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and fit it back in your Atari ST. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>croissant-…</b> (password <b>sidecart</b>) and open <b>http://croissant.local</b>.</p>"
+        },
+        {
           "id": "keyboardemulator-croissant-release-v1.2.0",
           "name": "Croissant Internal Keyboard Emulator - Release",
           "description": "Full firmware for SidecarTridge Croissant Internal Keyboard Emulator for Atari ST-family systems.",
@@ -442,6 +462,26 @@
       "description": "Firmware builds for the external dongle Souffle IKBD keyboard-controller emulator for Atari Mega ST and Mega STE families",
       "image": "https://docs.sidecartridge.com/sidecartridge-keyboard/assets/images/KEYBOARD-EMULATOR-SOUFFLE-PERSPECTIVE.png",
       "firmwares": [
+        {
+          "id": "keyboardemulator-souffle-release-v1.3.0",
+          "name": "Souffle External Dongle Keyboard Emulator - Release",
+          "description": "Full firmware for SidecarTridge Souffle External Dongle Keyboard Emulator for Atari Mega ST and Mega STE families.",
+          "device_type": "RP2350",
+          "datetime": "2026-11-26T19:47:26Z",
+          "version": "v1.3.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-souffle-full.uf2",
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and connect it to your Atari Mega ST or Mega STE. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>souffle-…</b> (password <b>sidecart</b>) and open <b>http://souffle.local</b>.</p>"
+        },
+        {
+          "id": "keyboardemulator-souffle-debug-v1.3.0",
+          "name": "Souffle External Dongle Keyboard Emulator - Debug release",
+          "description": "Full firmware for SidecarTridge Souffle External Dongle Keyboard Emulator for Atari Mega ST and Mega STE families. Debug mode.",
+          "device_type": "RP2350",
+          "datetime": "2026-11-26T19:47:26Z",
+          "version": "v1.3.0",
+          "uf2_url": "https://tosemulator.sidecartridge.com/ikbd-booster-v1.3.0-souffle-debug-full.uf2",
+          "post_install_html": "<p>The device restarts with the new firmware. Unplug it and connect it to your Atari Mega ST or Mega STE. Installing resets all settings and Bluetooth pairings, so on its first start it is in configuration mode: join the Wi-Fi network <b>souffle-…</b> (password <b>sidecart</b>) and open <b>http://souffle.local</b>.</p>"
+        },
         {
           "id": "keyboardemulator-souffle-release-v1.2.0",
           "name": "Souffle External Dongle Keyboard Emulator - Release",
